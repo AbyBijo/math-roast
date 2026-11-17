@@ -516,6 +516,7 @@ function init() {
       if (idx >= 0 && b === btns[idx] && !isCorrect) b.classList.add('wrong-pick');
     });
     $('score-now').textContent = 'Score: ' + state.score;
+    $('streak-now').textContent = 'Streak: ' + state.streak;
     showReaction(res.kind, isCorrect, q, !!isTimeout);
   }
 
