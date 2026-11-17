@@ -1,0 +1,300 @@
+/* Math Roast — freaky / amateur / chaotic on purpose. Loud colours, tilted cards,
+   meme faces flying everywhere. NO blue tap highlight or blue focus ring anywhere:
+   neutral grey focus border only. */
+/* FREAKY DISPLAY FONTS — bundled in fonts/ (Google Fonts, OFL), NO CDN: the
+   game must work offline on the fest laptop. Bungee = chunky outlined title
+   font; Rubik Glitch = glitchy lobby heading; Creepster = horror-fun
+   certificate title. The QUESTIONS, answer buttons, rules and certificate
+   body stay in a clean bold system font so play text is always readable. */
+@font-face { font-family: 'Bungee'; src: url('fonts/Bungee-Regular.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Rubik Glitch'; src: url('fonts/RubikGlitch-Regular.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Creepster'; src: url('fonts/Creepster-Regular.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+* { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+*:focus { outline: none; border-color: #888 !important; box-shadow: 0 0 0 3px #ccc; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+  background: #ffef00;
+  background-image:
+    radial-gradient(circle at 10% 20%, #ff5da2 0 90px, transparent 91px),
+    radial-gradient(circle at 90% 80%, #00e5ff 0 110px, transparent 111px),
+    radial-gradient(circle at 80% 10%, #7cff00 0 70px, transparent 71px),
+    linear-gradient(160deg, #ffef00, #ffb300);
+  min-height: 100vh; overflow-x: hidden; color: #111;
+}
+button, input { font-family: inherit; -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+button:focus, input:focus { outline: none; border-color: #888 !important; box-shadow: 0 0 0 3px #ccc; }
+
+/* ---- flying meme faces (behind everything, never clickable) ---- */
+#float-layer { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.float-meme {
+  position: absolute; object-fit: cover; border: 3px solid #111; border-radius: 12px;
+  pointer-events: none; box-shadow: 4px 4px 0 #111; background: #fff;
+  animation: drift linear infinite, bob ease-in-out infinite alternate;
+}
+@keyframes drift { from { transform: translateX(-15vw) rotate(-14deg); } to { transform: translateX(115vw) rotate(14deg); } }
+@keyframes bob { from { margin-top: -18px; } to { margin-top: 18px; } }
+.float-meme.burst { animation: burst 1.1s ease-out forwards; }
+@keyframes burst {
+  0% { transform: scale(.4) rotate(-30deg); opacity: 1; }
+  100% { transform: scale(1.6) rotate(40deg) translateY(-60px); opacity: 0; }
+}
+
+/* ---- rainbow sweep (under-60s only) ---- */
+#rainbow {
+  position: fixed; left: -120%; top: 38%; z-index: 60; pointer-events: none;
+  width: 120%; padding: 18px 0; text-align: center;
+  background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
+  border-top: 6px solid #111; border-bottom: 6px solid #111;
+  transform: rotate(-4deg); display: none;
+}
+#rainbow span { font-family: 'Bungee', "Segoe UI", sans-serif; font-size: 44px; font-weight: 400; color: #fff; -webkit-text-stroke: 2px #111; letter-spacing: 2px; }
+#rainbow.go { display: block; animation: sweep 1.6s ease-in-out 2; }
+@keyframes sweep { 0% { left: -120%; } 50% { left: 0; } 100% { left: 120%; } }
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 59; overflow: hidden; }
+.confetti-bit { position: absolute; top: -20px; width: 12px; height: 18px; animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+
+/* ---- layout ---- */
+.topbar {
+  position: relative; z-index: 10; display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 16px; background: #111; color: #ffef00;
+}
+.brand { font-family: 'Bungee', "Segoe UI", sans-serif; font-weight: 400; font-size: 20px; letter-spacing: 1px; }
+.brand span { color: #ff5da2; }
+.brand em { font-style: normal; font-size: 12px; color: #00e5ff; margin-left: 6px; }
+#sound-toggle { background: #ffef00; color: #111; border: 3px solid #fff; border-radius: 10px; padding: 8px 12px; font-weight: 900; }
+#app { position: relative; z-index: 10; max-width: 760px; margin: 0 auto; padding: 18px 14px 60px; }
+.screen { display: none; }
+.screen.active { display: block; }
+.card {
+  background: #fff; border: 4px solid #111; border-radius: 18px; padding: 24px 22px;
+  box-shadow: 8px 8px 0 #111; text-align: center;
+}
+.tilt-left { transform: rotate(-1.2deg); }
+.tilt-right { transform: rotate(1deg); }
+.wide-card { max-width: 720px; margin: 0 auto; }
+h1 {
+  font-family: 'Bungee', "Segoe UI", sans-serif; font-size: 64px; line-height: .95; margin: 6px 0 10px;
+  background: linear-gradient(90deg, #ff2e88, #ff7f00, #ffee00, #00c853, #0088ff, #7a00ff, #ff2e88);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  -webkit-text-stroke: 2px #111;
+  text-shadow: 4px 4px 0 #111, -2px -2px 0 #00e5ff, 2px -2px 0 #ffef00;
+  transform: rotate(-2deg) skew(-4deg); animation: title-glitch 3.2s infinite;
+}
+@keyframes title-glitch {
+  0%, 91%, 94%, 98%, 100% { transform: rotate(-2deg) skew(-4deg) translate(0, 0); }
+  92% { transform: rotate(-2deg) skew(-4deg) translate(-3px, 2px); }
+  93% { transform: rotate(-1deg) skew(2deg) translate(3px, -2px); }
+  96% { transform: rotate(-3deg) skew(-6deg) translate(2px, 1px); }
+}
+h2 { font-size: 34px; margin: 8px 0; }
+.tagline { font-size: 20px; font-weight: 900; background: #00e5ff; display: inline-block; padding: 6px 12px; border: 3px solid #111; border-radius: 10px; transform: rotate(1deg); }
+.rules { font-size: 16px; line-height: 1.5; }
+.field-label { display: block; font-weight: 900; margin: 16px 0 6px; text-align: left; }
+#player-name {
+  width: 100%; font-size: 22px; padding: 12px; border: 3px solid #111; border-radius: 12px;
+  background: #fffbe6; text-align: center;
+}
+.timer-pick { display: flex; gap: 10px; justify-content: center; }
+.timer-pick button {
+  font-size: 22px; font-weight: 900; padding: 12px 18px; border: 3px solid #111; border-radius: 12px;
+  background: #eee; transform: rotate(-2deg);
+}
+.timer-pick button:nth-child(2) { transform: rotate(2deg); }
+.timer-pick button:nth-child(3) { transform: rotate(-1deg); }
+.timer-pick button.selected { background: #7cff00; transform: scale(1.12) rotate(0deg); }
+.hint { font-size: 14px; color: #444; }
+.big-btn {
+  display: block; width: 100%; margin: 18px 0 10px; padding: 18px; font-size: 26px; font-weight: 400;
+  font-family: 'Bungee', "Segoe UI", sans-serif; letter-spacing: 1px;
+  color: #fff; background: #ff2e88; border: 4px solid #111; border-radius: 16px;
+  box-shadow: 6px 6px 0 #111; transform: rotate(-1deg); text-shadow: 2px 2px 0 #111;
+}
+.big-btn:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0 #111; }
+.small-btn {
+  padding: 10px 16px; margin: 6px; font-size: 16px; font-weight: 900; background: #00e5ff;
+  border: 3px solid #111; border-radius: 10px; box-shadow: 3px 3px 0 #111;
+}
+.small-btn.danger { background: #ff5b5b; color: #fff; }
+.best-line { font-weight: 900; }
+.offline-note { font-size: 13px; color: #666; }
+
+/* ---- game screen ---- */
+.game-card { transform: rotate(.6deg); }
+.game-top { display: flex; justify-content: space-between; gap: 8px; font-weight: 900; font-size: 16px; flex-wrap: wrap; }
+#timer-wrap { position: relative; height: 26px; background: #eee; border: 3px solid #111; border-radius: 13px; margin: 14px 0 4px; overflow: hidden; }
+#timer-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #7cff00, #ffef00, #ff2e88); transition: width .1s linear; }
+#timer-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; }
+#timer-limit-note { font-size: 13px; margin: 2px 0 8px; color: #555; }
+#progress-dots { display: flex; gap: 6px; justify-content: center; margin: 8px 0; }
+#progress-dots .dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #111; background: #fff; }
+#progress-dots .dot.done { background: #7cff00; }
+#progress-dots .dot.now { background: #ff2e88; animation: pulse .6s infinite alternate; }
+@keyframes pulse { from { transform: scale(1); } to { transform: scale(1.35); } }
+#question-text { font-size: 52px; margin: 14px 0; font-weight: 900; }
+#options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#options button {
+  font-size: 30px; font-weight: 900; padding: 20px 10px; border: 4px solid #111; border-radius: 14px;
+  background: #fff; box-shadow: 5px 5px 0 #111;
+}
+#options button:nth-child(1) { background: #ffe45e; transform: rotate(-1.5deg); }
+#options button:nth-child(2) { background: #7cff9e; transform: rotate(1.2deg); }
+#options button:nth-child(3) { background: #7cd4ff; transform: rotate(1deg); }
+#options button:nth-child(4) { background: #ff9de2; transform: rotate(-1deg); }
+#options button.correct { background: #00c853 !important; color: #fff; }
+#options button.wrong-pick { background: #d50000 !important; color: #fff; }
+#options button:disabled { opacity: .85; }
+.keys-hint { font-size: 13px; color: #666; }
+
+/* ---- reaction overlay (surprise!) ---- */
+#reaction {
+  position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.55); padding: 16px;
+}
+#reaction.hidden { display: none; }
+#reaction-inner {
+  background: #fff; border: 5px solid #111; border-radius: 20px; padding: 18px; max-width: 520px; width: 100%;
+  text-align: center; box-shadow: 10px 10px 0 #111; transform: rotate(-1.5deg);
+}
+#reaction.surprise #reaction-inner { animation: pop .28s ease-out, shake .45s .28s; }
+@keyframes pop { 0% { transform: scale(.3) rotate(-8deg); } 70% { transform: scale(1.15) rotate(2deg); } 100% { transform: scale(1) rotate(-1.5deg); } }
+@keyframes shake { 0%,100% { margin-left: 0; } 20% { margin-left: -14px; } 40% { margin-left: 12px; } 60% { margin-left: -9px; } 80% { margin-left: 7px; } }
+body.shake #app { animation: shake .45s; }
+#reaction-kind { font-family: 'Bungee', "Segoe UI", sans-serif; font-size: 30px; font-weight: 400; }
+#reaction-kind.cheer { color: #00a651; }
+#reaction-kind.roast, #reaction-kind.noob, #reaction-kind.timeout { color: #d50000; }
+#reaction-meme video, #reaction-meme img { max-width: 100%; max-height: 300px; border: 4px solid #111; border-radius: 12px; background: #000; }
+#reaction-line { font-size: 22px; font-weight: 900; margin: 10px 0 4px; }
+#reaction-answer { font-size: 16px; color: #444; }
+
+/* ---- result / contenders ---- */
+.final-score { font-size: 56px; font-weight: 900; margin: 6px 0; }
+.final-score span { font-family: 'Bungee', "Segoe UI", sans-serif; color: #ff2e88; }
+#result-title { font-family: 'Bungee', "Segoe UI", sans-serif; font-size: 40px; letter-spacing: 1px; transform: rotate(-1deg); }
+#result-meme video, #result-meme img { max-width: 260px; max-height: 220px; border: 4px solid #111; border-radius: 12px; }
+#rainbow-note { font-weight: 900; color: #7a00ff; font-size: 18px; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { border: 2px solid #111; padding: 7px 6px; text-align: left; }
+th { background: #ffef00; }
+tr.top3 td { background: #fff3b0; font-weight: 900; }
+tr.fastest td { background: #d8ffd8; }
+tr.me td { outline: 3px solid #ff2e88; }
+.badge { background: linear-gradient(90deg, red, orange, yellow, green, blue, violet); color: #fff; font-weight: 900; padding: 2px 8px; border-radius: 20px; border: 2px solid #111; white-space: nowrap; }
+@media (max-width: 560px) {
+  h1 { font-size: 48px; } #question-text { font-size: 38px; } #options button { font-size: 24px; }
+  #rainbow span { font-size: 28px; } th, td { font-size: 13px; padding: 5px 3px; }
+}
+
+/* ---- 2016 BRUTAL / MLG edits: swoopers, jump-cut pops, colour flashes ---- */
+/* Swoopers fly in from a different angle every time: top, sides, corners, diagonals. */
+.swooper { position: absolute; object-fit: cover; border: 3px solid #111; border-radius: 12px; pointer-events: none; box-shadow: 4px 4px 0 #111; background: #fff; }
+.swooper.from-top    { animation: swoop-top linear forwards; }
+.swooper.from-bottom { animation: swoop-bottom linear forwards; }
+.swooper.from-left   { animation: swoop-left linear forwards; }
+.swooper.from-right  { animation: swoop-right linear forwards; }
+.swooper.from-tl     { animation: swoop-tl linear forwards; }
+.swooper.from-tr     { animation: swoop-tr linear forwards; }
+.swooper.from-bl     { animation: swoop-bl linear forwards; }
+.swooper.from-br     { animation: swoop-br linear forwards; }
+@keyframes swoop-top    { from { top: -160px; transform: rotate(-40deg) scale(.6); } to { top: 110vh; transform: rotate(380deg) scale(1.2); } }
+@keyframes swoop-bottom { from { top: 110vh; transform: rotate(30deg) scale(.6); } to { top: -160px; transform: rotate(-320deg) scale(1.2); } }
+@keyframes swoop-left   { from { left: -160px; transform: rotate(-50deg) scale(.6); } to { left: 110vw; transform: rotate(340deg) scale(1.2); } }
+@keyframes swoop-right  { from { left: 110vw; transform: rotate(50deg) scale(.6); } to { left: -160px; transform: rotate(-340deg) scale(1.2); } }
+@keyframes swoop-tl     { from { top: -160px; left: -160px; transform: rotate(-60deg) scale(.5); } to { top: 110vh; left: 110vw; transform: rotate(400deg) scale(1.3); } }
+@keyframes swoop-tr     { from { top: -160px; left: 110vw; transform: rotate(60deg) scale(.5); } to { top: 110vh; left: -160px; transform: rotate(-400deg) scale(1.3); } }
+@keyframes swoop-bl     { from { top: 110vh; left: -160px; transform: rotate(60deg) scale(.5); } to { top: -160px; left: 110vw; transform: rotate(-400deg) scale(1.3); } }
+@keyframes swoop-br     { from { top: 110vh; left: 110vw; transform: rotate(-60deg) scale(.5); } to { top: -160px; left: -160px; transform: rotate(400deg) scale(1.3); } }
+
+/* Jump-cut pop: a meme image suddenly zooms in for a beat, then vanishes. */
+.jump-pop {
+  position: fixed; z-index: 40; pointer-events: none; object-fit: cover;
+  border: 4px solid #111; border-radius: 14px; box-shadow: 6px 6px 0 #111; background: #fff;
+  animation: jump-pop .8s ease-in-out forwards;
+}
+@keyframes jump-pop {
+  0% { transform: scale(0) rotate(-25deg); opacity: 0; }
+  25% { transform: scale(1.5) rotate(8deg); opacity: 1; }
+  60% { transform: scale(1.2) rotate(-6deg); opacity: 1; }
+  100% { transform: scale(0) rotate(30deg); opacity: 0; }
+}
+
+/* Rapid background colour flashes on answers — the chaos is around the card,
+   the card itself stays solid white so the question stays readable. */
+body.flash-cheer { animation: flash-cheer .6s steps(3) 1; }
+body.flash-roast { animation: flash-roast .7s steps(4) 1; }
+body.flash-rainbow { animation: flash-rainbow 1.2s steps(6) 2; }
+@keyframes flash-cheer { 0% { filter: hue-rotate(0deg); } 33% { filter: hue-rotate(120deg); background: #7cff00; } 66% { filter: hue-rotate(240deg); background: #00e5ff; } 100% { filter: hue-rotate(0deg); } }
+@keyframes flash-roast { 0% { filter: hue-rotate(0deg); } 25% { filter: hue-rotate(90deg); background: #ff0044; } 50% { filter: hue-rotate(200deg); background: #7a00ff; } 75% { filter: hue-rotate(300deg); background: #ff0044; } 100% { filter: hue-rotate(0deg); } }
+@keyframes flash-rainbow { 0% { filter: hue-rotate(0deg); } 20% { filter: hue-rotate(72deg); } 40% { filter: hue-rotate(144deg); } 60% { filter: hue-rotate(216deg); } 80% { filter: hue-rotate(288deg); } 100% { filter: hue-rotate(360deg); } }
+
+/* ---- AMONG US LOBBY: dark space, crewmates, one button ---- */
+.lobby-card {
+  background: #0d1b2a; color: #fff; border-color: #c51111;
+  background-image:
+    radial-gradient(circle at 12% 22%, #fff 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 12%, #fff 0 2px, transparent 3px),
+    radial-gradient(circle at 32% 78%, #fff 0 2px, transparent 3px),
+    radial-gradient(circle at 88% 68%, #fff 0 2px, transparent 3px),
+    radial-gradient(circle at 55% 38%, #fff 0 1px, transparent 2px),
+    linear-gradient(160deg, #0d1b2a, #13293d);
+}
+.lobby-title { font-family: 'Rubik Glitch', "Segoe UI", sans-serif; color: #ff3b3b; font-size: 40px; letter-spacing: 2px; text-shadow: 3px 3px 0 #000; margin: 4px 0; animation: lobby-flicker 2.6s infinite; }
+@keyframes lobby-flicker { 0%, 88%, 90%, 94%, 95%, 100% { opacity: 1; } 89% { opacity: .35; } 93% { opacity: .55; } }
+.lobby-name { font-weight: 900; color: #7cd4ff; min-height: 1.2em; }
+.lobby-crew { display: flex; gap: 10px; justify-content: center; margin: 10px 0; }
+.lobby-crew video { width: 30%; max-width: 160px; border: 3px solid #fff; border-radius: 12px; background: #000; }
+.lobby-rules { font-size: 18px; line-height: 1.55; background: rgba(255,255,255,.08); border: 2px solid #fff; border-radius: 12px; padding: 14px; }
+.lobby-rules strong { color: #ffee00; }
+.lobby-sus { font-weight: 900; color: #ff5b5b; }
+.lobby-btn { background: #c51111; }
+.lobby-card .hint { color: #9db8cc; }
+
+/* ---- QUIRKY CERTIFICATE: goofy joke certificate, not a real one ---- */
+.certificate {
+  position: relative; margin: 18px 0; padding: 20px 16px 12px;
+  background: #fffbe6; border: 6px double #a8842c; border-radius: 8px;
+  box-shadow: 5px 5px 0 #111; transform: rotate(-.8deg);
+}
+.cert-eyebrow { font-size: 13px; letter-spacing: 2px; font-weight: 900; color: #a8842c; margin: 0; }
+.cert-title { font-family: 'Creepster', Georgia, "Times New Roman", serif; font-size: 30px; font-weight: 400; color: #7a1f1f; margin: 8px 0; }
+.cert-text { font-size: 15px; margin: 4px 0; }
+.cert-name { font-family: Georgia, "Times New Roman", serif; font-size: 26px; font-weight: 900; margin: 6px 0; border-bottom: 2px solid #a8842c; display: inline-block; padding: 0 18px; }
+.cert-meme video, .cert-meme img { max-width: 180px; max-height: 150px; border: 3px solid #111; border-radius: 10px; margin-top: 8px; }
+.cert-date { font-size: 13px; color: #555; margin: 8px 0 2px; }
+.cert-seal {
+  position: absolute; right: 12px; bottom: 34px; width: 74px; height: 74px; border-radius: 50%;
+  background: #c51111; color: #fff; font-weight: 900; font-size: 12px; line-height: 1.25;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  border: 3px dashed #ffd700; transform: rotate(12deg);
+}
+.cert-fine { font-size: 11px; color: #888; margin: 4px 0 0; }
+
+/* ---- RAINBOW HORSE: hamster on a unicorn, flying ACROSS the screen ---- */
+/* Flies right OVER / THROUGH the question area (z-index above the card),
+   with a rainbow sparkle trail. pointer-events: none, ~1.8s — it can NEVER
+   block the question text or the answer buttons; it sweeps past and is gone. */
+#rainbow-horse-layer { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 45; }
+.rainbow-horse {
+  position: absolute; top: 34%; left: -40vw; width: 340px; max-width: 70vw;
+  pointer-events: none; border: none; border-radius: 16px;
+  animation: horse-fly 1.8s linear forwards;
+}
+.rainbow-horse.big { width: 460px; max-width: 86vw; top: 28%; }
+@keyframes horse-fly {
+  0% { left: -40vw; transform: translateY(0) rotate(-4deg) scale(.9); }
+  25% { left: -5vw; transform: translateY(-26px) rotate(3deg) scale(1); }
+  50% { left: 30vw; transform: translateY(8px) rotate(-3deg) scale(1.05); }
+  75% { left: 65vw; transform: translateY(-20px) rotate(3deg) scale(1); }
+  100% { left: 110vw; transform: translateY(0) rotate(-4deg) scale(.9); }
+}
+.sparkle {
+  position: fixed; z-index: 46; pointer-events: none;
+  animation: sparkle-pop 1.4s ease-out forwards; text-shadow: 0 0 8px #fff;
+}
+@keyframes sparkle-pop {
+  0% { transform: scale(0) rotate(0deg); opacity: 0; }
+  30% { transform: scale(1.4) rotate(90deg); opacity: 1; }
+  100% { transform: scale(0) rotate(220deg); opacity: 0; }
+}

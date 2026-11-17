@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math Roast — MAC Fest 2026</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- Flying meme faces: chaos layer. Behind the game card, never blocks clicks. -->
+<div id="float-layer" aria-hidden="true"></div>
+<!-- Rainbow sweep: only fires if the whole round finishes in under 60 seconds. -->
+<div id="rainbow" aria-hidden="true"><span>UNDER 60 SECONDS!</span></div>
+<div id="confetti" aria-hidden="true"></div>
+<!-- Rainbow horse fly-across layer: hamster on a unicorn, over the question, never clickable. -->
+<div id="rainbow-horse-layer" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="brand">MATH <span>ROAST</span> <em>MAC Fest 2026</em></div>
+  <button id="sound-toggle" type="button" title="Sound on / off">SOUND: ON</button>
+</header>
+
+<main id="app">
+  <!-- ============ START ============ -->
+  <section id="start-screen" class="screen active">
+    <div class="card tilt-left">
+      <h1>MATH<br>ROAST</h1>
+      <p class="tagline">10 questions. 20 points. Do not get roasted.</p>
+      <p class="rules">Get it right: +2 and the memes cheer you.<br>
+      Get it wrong: &minus;1 and the memes roast you. Out loud. In front of everyone.<br>
+      Score 0 and get one wrong? That's a full <strong>NOOB</strong>.</p>
+
+      <label class="field-label" for="player-name">Your name</label>
+      <input id="player-name" type="text" maxlength="20" placeholder="Type your name..." autocomplete="off">
+
+      <p class="field-label">How fast do you want it? Pick your seconds per question:</p>
+      <div class="timer-pick" id="timer-pick">
+        <button type="button" data-secs="5">5s</button>
+        <button type="button" data-secs="6">6s</button>
+        <button type="button" data-secs="7">7s</button>
+        <button type="button" data-secs="8" class="selected">8s</button>
+      </div>
+      <p class="hint">Faster timer = same questions, less thinking time. Finish the whole round in under 60 seconds and a rainbow flies across the screen.</p>
+
+      <button id="play-btn" type="button" class="big-btn">PLAY</button>
+      <button id="contenders-btn" type="button" class="small-btn">CONTENDERS</button>
+      <p class="best-line" id="best-line"></p>
+      <p class="offline-note">Works offline from local files — no internet needed on fest day.</p>
+    </div>
+  </section>
+
+  <!-- ============ AMONG US LOBBY ============ -->
+  <section id="lobby-screen" class="screen">
+    <div class="card lobby-card">
+      <h2 class="lobby-title">AMONG US LOBBY</h2>
+      <p id="lobby-name" class="lobby-name"></p>
+      <div class="lobby-crew">
+        <video src="memes/roasting/roast-38.mp4" autoplay loop muted playsinline title="Red crewmate"></video>
+        <video src="memes/roasting/roast-39.mp4" autoplay loop muted playsinline title="Imposter suit"></video>
+        <video src="memes/roasting/roast-40.mp4" autoplay loop muted playsinline title="Emergency meeting"></video>
+      </div>
+      <p class="lobby-rules">You get <strong><span id="lobby-timer">8</span> seconds</strong> to complete each math question. Use your brain and try to beat as many questions as you can. You will get <strong>10 questions</strong> in the round, and you will be evaluated according to the questions. Have fun!</p>
+      <p class="lobby-sus">One of the answers is sus. Find it.</p>
+      <button id="let-me-in-btn" type="button" class="big-btn lobby-btn">LET ME IN</button>
+      <p class="hint">The round clock starts when you tap LET ME IN — not before.</p>
+    </div>
+  </section>
+
+  <!-- ============ GAME ============ -->
+  <section id="game-screen" class="screen">
+    <div class="card game-card">
+      <div class="game-top">
+        <span id="q-count">Q 1 / 10</span>
+        <span id="q-type">Addition</span>
+        <span id="score-now">Score: 0</span>
+        <span id="streak-now">Streak: 0</span>
+      </div>
+      <div id="timer-wrap"><div id="timer-bar"></div><span id="timer-text">8s</span></div>
+      <p id="timer-limit-note"></p>
+      <div id="progress-dots"></div>
+      <h2 id="question-text">47 + 38 = ?</h2>
+      <div id="options"></div>
+      <p class="keys-hint">Press 1–4 to answer. No second taps — one answer only.</p>
+    </div>
+  </section>
+
+  <!-- ============ RESULT ============ -->
+  <section id="result-screen" class="screen">
+    <div class="card tilt-right">
+      <h2 id="result-title">DONE!</h2>
+      <p id="result-name"></p>
+      <p class="final-score"><span id="final-score">0</span> / 20</p>
+      <p id="result-verdict"></p>
+      <p id="result-time"></p>
+      <p id="result-rank"></p>
+      <p id="rainbow-note"></p>
+      <div id="result-meme"></div>
+      <!-- Quirky certificate — just for fun. A joke certificate, not a real one. -->
+      <div id="certificate" class="certificate">
+        <p class="cert-eyebrow">MAC Fest 2026 — Math Roast</p>
+        <p class="cert-title" id="cert-title">Certified Decent Brain</p>
+        <p class="cert-text">This totally official certificate is awarded to</p>
+        <p class="cert-name" id="cert-name">Anonymous</p>
+        <p class="cert-text">for scoring <strong id="cert-score">0 / 20</strong> in <span id="cert-time">0s</span> at <span id="cert-timer">8s per question</span>.</p>
+        <div id="cert-meme" class="cert-meme"></div>
+        <p class="cert-date">Issued <span id="cert-date"></span> · Signed, The Meme Folder</p>
+        <div class="cert-seal">★<br>100%<br>OFFICIAL*</div>
+        <p class="cert-fine">*Not official in any way. The memes have spoken.</p>
+      </div>
+      <button id="play-again-btn" type="button" class="big-btn">PLAY AGAIN</button>
+      <button id="result-contenders-btn" type="button" class="small-btn">SEE CONTENDERS</button>
+      <button id="home-btn" type="button" class="small-btn">BACK TO START</button>
+    </div>
+  </section>
+
+  <!-- ============ CONTENDERS ============ -->
+  <section id="contenders-screen" class="screen">
+    <div class="card wide-card">
+      <h2>CONTENDERS</h2>
+      <p class="hint">Every round played on this laptop. Sorted: highest score first, then fastest time.</p>
+      <p id="contenders-summary"></p>
+      <div id="contenders-table-wrap">
+        <table id="contenders-table">
+          <thead><tr><th>#</th><th>Name</th><th>Score</th><th>Time</th><th>Timer</th><th></th><th>Date</th></tr></thead>
+          <tbody id="contenders-body"></tbody>
+        </table>
+        <p id="contenders-empty">No contenders yet. Be the first to get roasted.</p>
+      </div>
+      <button id="clear-contenders-btn" type="button" class="small-btn danger">CLEAR CONTENDERS</button>
+      <button id="back-btn" type="button" class="small-btn">BACK TO GAME</button>
+    </div>
+  </section>
+</main>
+
+<!-- Reaction overlay: pops INSTANTLY on every answer. No warning before a roast — that is the joke. -->
+<div id="reaction" class="hidden" role="alert">
+  <div id="reaction-inner">
+    <div id="reaction-kind"></div>
+    <div id="reaction-meme"></div>
+    <div id="reaction-line"></div>
+    <div id="reaction-answer"></div>
+  </div>
+</div>
+
+<script src="questions.js"></script>
+<script src="memes.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
