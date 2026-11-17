@@ -1,22 +1,27 @@
 /* Math Roast — plain JS, no framework. PRD v1.0 + user updates 2026-11-17:
-   fixed 100-question pool (questions.js, no algebra), timer chosen per round
-   (5/6/7/8s, default 8), name + contenders in localStorage, freaky flying
+   three 100-question pools (questions.js: EASY 1-9, MEDIUM classic,
+   HARD 10-99, no algebra), timer chosen per round (5/6/7/8s, default 8),
+   mode picked per round (EASY / MEDIUM / HARD, default MEDIUM),
+   name + contenders in localStorage, freaky flying
    meme faces, surprise roast, rainbow if round < 60s, rainbow horse
    (hamster on a unicorn) fly-across on any correct answer under 2 seconds,
-   crying-chicken timeout meme with escalating chicken cry, quirky certificate
-   + completion music on the result screen.
-   AUDIO: Giphy mp4s are SILENT. Sound comes from (1) the meme's ONE paired
+   7-entry timeout pool (crying chicken with escalating cry + 6 new
+   reactions), contextual roast/cheer tiers, fullscreen + responsive,
+   quirky certificate + completion music on the result screen.
+   AUDIO: Giphy mp4s are SILENT. Sound comes ONLY from the meme's ONE paired
    mp3 (entry.audio in memes.js — 1-to-1, never a random sound from the
-   category), (2) the SpeechSynthesis voice line if that meme has no mp3 yet.
+   category). A meme with audio: null plays SILENT — no generated/robot voice
+   anywhere, ever (v2: only roast-14 Kermit + roast-34 Speed-laughing).
    That meme + voice pairing is the heart of every reaction.
    A siren-type sting is only ONE optional surprise sound among others —
    it is NOT the focus and NOT required. Occasionally (about 1 reaction in 3)
    a short surprise sting plays too (audio/sfx/siren-01.mp3 or
    audio/sfx/airhorn-01.mp3 if present, else a synthesised blip), so a roast
-   can still hit out of nowhere. Real meme audios: 39 MyInstants mp3s +
+   can still hit out of nowhere. Real meme audios: 78 of 80 reaction memes
+   have a real paired MyInstants mp3 (v2 wired 32 more) + 6 timeout sounds +
    chicken cry x2 + Ohmagaa, Anime Wow, Speed bark x2, Speed scream, SIU,
    hamster laugh, Among Us role reveal + emergency meeting, evil laugh,
-   bomboclat, pigeon hook — all integrated 2026-11-17.
+   bomboclat, pigeon hook — all real clips, no generated voice.
    Missing audio files NEVER break the game: every play is caught.
    SCHOOL-SAFE: roasts target the SCORE, never the person. No slurs, no
    racist content in any meme, line or sound. The pigeon hook on the result
@@ -86,6 +91,51 @@ function cryLevelFor(n) {
   if (n === 3) return { capMs: 3000, volume: 1.0, file: 'audio/sfx/chicken-cry.mp3' };
   return { capMs: 6000, volume: 1.0, file: 'audio/sfx/chicken-cry-loud.mp3' };
 }
+function isEasyQuestion(q) {
+  // EASY = both operands single-digit (< 10). Getting one of these wrong stings more.
+  return !!q && typeof q.a === 'number' && typeof q.b === 'number' && q.a < 10 && q.b < 10;
+}
+function shiftHarsher(tier) {
+  // One step harsher on the mild -> harsh -> brutal ladder (caps at brutal).
+  var order = ['mild', 'harsh', 'brutal'];
+  var i = order.indexOf(tier);
+  if (i < 0) return tier;
+  return order[Math.min(i + 1, order.length - 1)];
+}
+function roastTierFor(mode, streakBefore, isEasy, consecLosses) {
+  // MODE-AWARE roast tier. The mode sets the baseline, the context layers on:
+  //   broken streak (was on a 2+ streak) always wins -> 'streak'.
+  //   EASY wrong -> brutal baseline (failing easy mode gets roasted hardest).
+  //   HARD wrong -> mild baseline (hard mode got you, fair enough).
+  //   MEDIUM wrong -> standard escalation by consecutive wrongs.
+  //   Wrong on an EASY question (both operands < 10) then shifts one tier
+  //   harsher (caps at brutal; in EASY mode every question is easy, so the
+  //   shift is a no-op there — the baseline is already brutal).
+  if (streakBefore >= 2) return 'streak';
+  var tier;
+  if (mode === 'easy') tier = 'brutal';
+  else if (mode === 'hard') tier = 'mild';
+  else if (consecLosses >= 3) tier = 'brutal';
+  else if (consecLosses === 2) tier = 'harsh';
+  else tier = 'mild';
+  if (isEasy) tier = shiftHarsher(tier);
+  return tier;
+}
+function cheerTierFor(mode, hadLoss) {
+  // MODE-AWARE cheer tier. Correct right after a loss = comeback cheer
+  // (the recovery matters most); otherwise HARD correct = biggest cheer,
+  // EASY/MEDIUM correct = standard cheer.
+  if (hadLoss) return 'comeback';
+  if (mode === 'hard') return 'big';
+  return 'standard';
+}
+function pickFromTier(list, tier, lastPick) {
+  // Pick a random meme from ONE tier; fall back to the whole list if that
+  // tier is ever empty (so a tier typo can never break the game).
+  var pool = (list || []).filter(function (e) { return e.tier === tier; });
+  if (!pool.length) pool = list || [];
+  return pickMeme(pool, lastPick);
+}
 function winErrFor(consecLosses, alreadyShown) {
   // WINDOWS ERROR trigger: 3rd consecutive wrong answer (answered, not a
   // timeout — timeouts keep their chicken), first time per round only.
@@ -130,10 +180,10 @@ function randomLine(kind) {
 }
 
 if (typeof window !== 'undefined') {
-  window.MathRoast = { applyAnswer: applyAnswer, verdictFor: verdictFor, sortContenders: sortContenders, sampleRound: sampleRound, shuffledOptions: shuffledOptions, pickMeme: pickMeme, cleanName: cleanName, beat60: beat60, randomLine: randomLine, cryLevelFor: cryLevelFor, certificateFor: certificateFor, fastAnswer: fastAnswer, completionMusicFor: completionMusicFor, winErrFor: winErrFor };
+  window.MathRoast = { applyAnswer: applyAnswer, verdictFor: verdictFor, sortContenders: sortContenders, sampleRound: sampleRound, shuffledOptions: shuffledOptions, pickMeme: pickMeme, cleanName: cleanName, beat60: beat60, randomLine: randomLine, cryLevelFor: cryLevelFor, certificateFor: certificateFor, fastAnswer: fastAnswer, completionMusicFor: completionMusicFor, winErrFor: winErrFor, isEasyQuestion: isEasyQuestion, roastTierFor: roastTierFor, cheerTierFor: cheerTierFor, pickFromTier: pickFromTier };
 }
 if (typeof module !== 'undefined') {
-  module.exports = { applyAnswer: applyAnswer, verdictFor: verdictFor, sortContenders: sortContenders, sampleRound: sampleRound, shuffledOptions: shuffledOptions, pickMeme: pickMeme, cleanName: cleanName, beat60: beat60, randomLine: randomLine, cryLevelFor: cryLevelFor, certificateFor: certificateFor, fastAnswer: fastAnswer, completionMusicFor: completionMusicFor, winErrFor: winErrFor };
+  module.exports = { applyAnswer: applyAnswer, verdictFor: verdictFor, sortContenders: sortContenders, sampleRound: sampleRound, shuffledOptions: shuffledOptions, pickMeme: pickMeme, cleanName: cleanName, beat60: beat60, randomLine: randomLine, cryLevelFor: cryLevelFor, certificateFor: certificateFor, fastAnswer: fastAnswer, completionMusicFor: completionMusicFor, winErrFor: winErrFor, isEasyQuestion: isEasyQuestion, roastTierFor: roastTierFor, cheerTierFor: cheerTierFor, pickFromTier: pickFromTier };
 }
 
 /* ---------- browser app (only runs with a DOM) ---------- */
@@ -152,6 +202,8 @@ function init() {
   if (__mathRoastInited) return;
   __mathRoastInited = true;
   var QUESTIONS = (typeof window !== 'undefined' && window.QUESTIONS) || (typeof QUESTIONS !== 'undefined' ? QUESTIONS : []);
+  var QUESTION_POOLS = (typeof window !== 'undefined' && window.QUESTION_POOLS) || (typeof QUESTION_POOLS !== 'undefined' ? QUESTION_POOLS : null);
+  var POOLS = QUESTION_POOLS || { easy: QUESTIONS, medium: QUESTIONS, hard: QUESTIONS };
   var MEMES = (typeof window !== 'undefined' && window.MEMES) || (typeof MEMES !== 'undefined' ? MEMES : { cheering: [], roasting: [], noob: [] });
 
   var $ = function (id) { return document.getElementById(id); };
@@ -164,7 +216,7 @@ function init() {
   var SOUND_KEY = 'mathRoastSoundV1';
 
   var state = {
-    name: 'Anonymous', timerLimit: 8, score: 0, qIndex: 0, questions: [],
+    name: 'Anonymous', timerLimit: 8, mode: 'medium', score: 0, qIndex: 0, questions: [],
     current: null, answered: false, timerId: null, timeLeft: 8, roundStart: 0,
     questionStart: 0, consecLosses: 0, winErrShown: false,
     streak: 0, bestStreak: store.get('mathRoastStreakBestV1', 0),
@@ -173,7 +225,7 @@ function init() {
     latestEntryId: null
   };
 
-  /* ----- audio: paired mp3 -> named sting -> synth -> speech. Never throws. ----- */
+  /* ----- audio: paired mp3 -> named sting -> synth. Never throws. No speech. ----- */
   var audioCtx = null;
   function getAudioCtx() {
     try {
@@ -250,28 +302,12 @@ function init() {
       } catch (e) { resolve(false); }
     });
   }
-  function speak(text) {
-    if (!state.soundOn) return;
-    try {
-      if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(text);
-      u.rate = 1.15; u.pitch = 1.3; u.volume = 1;
-      window.speechSynthesis.speak(u);
-    } catch (e) {}
-  }
   function playMemeAudio(entry) {
     // MEME + VOICE RESONANCE: the voice belongs to THIS meme. Play its real
-    // paired mp3 (entry.audio, from MyInstants). SpeechSynthesis is now ONLY
-    // the fallback if that mp3 is missing. Long clips are cut at ~2.6s.
-    if (!entry) { return; }
-    if (entry.audio) {
-      tryPlayFile(entry.audio, 2600).then(function (played) {
-        if (!played) speak(entry.voice);
-      });
-    } else {
-      speak(entry.voice);
-    }
+    // paired mp3 (entry.audio, from MyInstants). A meme with audio: null
+    // plays SILENT — no generated/robot voice, ever. Long clips cut at ~2.6s.
+    if (!entry || !entry.audio) { return; }
+    tryPlayFile(entry.audio, 2600);
   }
   function playAirhorn() {
     // Perfect round / under-60s rainbow finish: VERY LOUD AIRHORN (1.13s, plays whole).
@@ -424,7 +460,7 @@ function init() {
       : 'No rounds played yet on this laptop. Be the first.';
   }
 
-  /* ----- round flow: start -> AMONG US LOBBY -> questions ----- */
+  /* ----- round flow: start -> LOBBY -> questions ----- */
   function playAmongUsStart() {
     // The Among Us starting sound — the imposter/start sting. This is its
     // main home (the lobby). The imposter reveal sting also stays paired to
@@ -438,6 +474,7 @@ function init() {
     stopCurrentAudio();
     state.name = cleanName($('player-name').value);
     $('lobby-timer').textContent = state.timerLimit;
+    $('lobby-mode').textContent = state.mode.toUpperCase() + ' MODE';
     $('lobby-name').textContent = state.name === 'Anonymous' ? '' : state.name + ', you are in the lobby.';
     showScreen('lobby-screen');
     playAmongUsStart();
@@ -446,7 +483,7 @@ function init() {
     // LET ME IN -> Question 1. The round clock starts HERE.
     stopCurrentAudio();
     state.score = 0; state.qIndex = 0; state.streak = 0; state.consecLosses = 0; state.winErrShown = false;
-    state.questions = sampleRound(QUESTIONS, 10);
+    state.questions = sampleRound(POOLS[state.mode] || QUESTIONS, 10);
     state.roundStart = Date.now();
     showScreen('game-screen');
     showQuestion();
@@ -500,6 +537,10 @@ function init() {
     var isCorrect = value !== null && value === q.answer;
     var res = applyAnswer(state.score, isCorrect);
     var wasNoob = res.kind === 'noob';
+    // Context for the tiered reaction: captured BEFORE streak/losses change.
+    var streakBefore = state.streak;
+    var hadLoss = state.consecLosses > 0;
+    var wasEasy = isEasyQuestion(q);
     state.score = res.score;
     if (isCorrect) {
       state.streak++; if (state.streak > state.bestStreak) { state.bestStreak = state.streak; store.set('mathRoastStreakBestV1', state.bestStreak); }
@@ -517,7 +558,12 @@ function init() {
     });
     $('score-now').textContent = 'Score: ' + state.score;
     $('streak-now').textContent = 'Streak: ' + state.streak;
-    showReaction(res.kind, isCorrect, q, !!isTimeout);
+    // Contextual roast/cheer tier (v2): streak broken > brutal > harsh > mild,
+    // comeback cheer after a loss. Timeouts and NOOBs ignore tiers.
+    var tier = null;
+    if (isCorrect) tier = cheerTierFor(state.mode, hadLoss);
+    else if (res.kind === 'roast') tier = roastTierFor(state.mode, streakBefore, wasEasy, state.consecLosses);
+    showReaction(res.kind, isCorrect, q, !!isTimeout, tier);
   }
 
   function memeEl(entry) {
@@ -529,10 +575,11 @@ function init() {
     v.src = path; v.autoplay = true; v.loop = true; v.muted = true; v.playsInline = true;
     return v;
   }
-  function showReaction(kind, isCorrect, q, isTimeout) {
+  function showReaction(kind, isCorrect, q, isTimeout, tier) {
     // SURPRISE: no warning, no build-up. Overlay pops instantly, sting hits now.
     // MEME + VOICE RESONANCE: the meme entry carries its own matching voice.
-    // TIMEOUT: the crying chicken is the face of it — chicken meme + chicken cry.
+    // TIMEOUT: a random reaction from the 7-entry pool — the crying chicken
+    // (with its escalating cry) or one of the 6 new timeout reactions.
     // The cry ESCALATES with consecutive losses (see cryLevelFor): on a normal
     // wrong answer the roast meme shows, but the cry still follows the count.
     if (isTimeout) kind = 'timeout';
@@ -544,19 +591,21 @@ function init() {
       isWinErr = true; state.winErrShown = true;
       meme = MEMES.winError[0]; line = meme.voice;
     }
-    else if (kind === 'cheer') { meme = pickMeme(MEMES.cheering, state.lastCheer); state.lastCheer = meme; }
+    else if (kind === 'cheer') { meme = pickFromTier(MEMES.cheering, tier || 'standard', state.lastCheer); state.lastCheer = meme; }
     else if (kind === 'noob') { meme = pickMeme(MEMES.noob, state.lastNoob); state.lastNoob = meme; }
     else if (kind === 'timeout') { meme = pickMeme(MEMES.timeout, state.lastTimeout); state.lastTimeout = meme; }
-    else { meme = pickMeme(MEMES.roasting, state.lastRoast); state.lastRoast = meme; }
+    else { meme = pickFromTier(MEMES.roasting, tier || 'mild', state.lastRoast); state.lastRoast = meme; }
     if (!isWinErr) line = meme ? meme.voice : randomLine(kind === 'timeout' ? 'roast' : kind);
     var cryLevel = cryLevelFor(state.consecLosses);
     if (isTimeout) {
-      // The chicken cry IS this meme's paired sound — played at the escalated
-      // length/volume, not the plain 2.6s meme cap. No record scratch anymore.
-      playChickenCry(cryLevel, 0);
+      // TIMEOUT POOL: a random reaction. The chicken gets its escalating cry
+      // (cryLevelFor) as its sound; the other six just play their own paired
+      // mp3 once — no cry after them.
+      if (meme && meme.chicken) playChickenCry(cryLevel, 0);
+      else if (meme) playMemeAudio(meme);
     } else {
       if (!isWinErr) playSurpriseSting(kind); // the XP ding IS the sting for the Windows error
-      if (meme) playMemeAudio(meme); else speak(line);
+      if (meme) playMemeAudio(meme);
       if (kind !== 'cheer') playChickenCry(cryLevel, 700); // cry follows the loss count
     }
     flashBody(kind); // 2016 MLG colour flash around the (still readable) card
@@ -586,7 +635,7 @@ function init() {
     var entry = {
       id: Date.now() + '-' + Math.floor(Math.random() * 10000),
       name: state.name, score: state.score, timeSecs: timeSecs,
-      timerLimit: state.timerLimit, beat60: fast,
+      timerLimit: state.timerLimit, mode: state.mode, beat60: fast,
       verdict: verdictFor(state.score), at: Date.now(),
       date: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
     };
@@ -602,6 +651,7 @@ function init() {
 
     $('result-title').textContent = state.score === 20 ? 'PERFECT!' : state.score === 0 ? 'FULL NOOB!' : 'DONE!';
     $('result-name').textContent = state.name + ' — you played at ' + state.timerLimit + 's per question.';
+    $('result-mode').textContent = 'Mode: ' + state.mode.toUpperCase() + '.';
     $('final-score').textContent = state.score;
     $('result-verdict').textContent = verdictFor(state.score);
     $('result-time').textContent = 'Time: ' + timeSecs + ' seconds' + (fast ? ' — under 60!' : '');
@@ -613,6 +663,7 @@ function init() {
     $('cert-score').textContent = state.score + ' / 20';
     $('cert-time').textContent = timeSecs + 's';
     $('cert-timer').textContent = state.timerLimit + 's per question';
+    $('cert-mode').textContent = state.mode.toUpperCase();
     $('cert-date').textContent = entry.date;
     var cm = $('cert-meme'); cm.innerHTML = '';
     var certMeme = state.score === 0 ? pickMeme(MEMES.noob, null)
@@ -702,12 +753,44 @@ function init() {
       if (e.timeSecs === fastest) tr.classList.add('fastest');
       if (e.id === state.latestEntryId) tr.classList.add('me');
       var medal = i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : '';
-      tr.innerHTML = '<td>' + medal + (i + 1) + '</td><td>' + e.name + '</td><td>' + e.score + ' / 20</td><td>' + e.timeSecs + 's</td><td>' + e.timerLimit + 's</td><td>' + (e.beat60 ? '<span class="badge">BEAT 60s 🌈</span>' : '') + '</td><td>' + e.date + '</td>';
+      var m = (e.mode || 'medium').toLowerCase();
+      tr.innerHTML = '<td>' + medal + (i + 1) + '</td><td>' + e.name + '</td><td>' + e.score + ' / 20</td><td>' + e.timeSecs + 's</td><td>' + e.timerLimit + 's</td><td><span class="mode-badge mode-' + m + '">' + m.toUpperCase() + '</span></td><td>' + (e.beat60 ? '<span class="badge">BEAT 60s 🌈</span>' : '') + '</td><td>' + e.date + '</td>';
       body.appendChild(tr);
     });
   }
 
+  /* ----- fullscreen ----- */
+  // PLAY enters fullscreen on the whole page (a user gesture, so the browser
+  // allows it); the toggle button lets the player enter/exit any time. If
+  // fullscreen is unavailable or denied, everything fails silently — the
+  // game just plays in the normal window.
+  function enterFullscreen() {
+    try {
+      var el = document.documentElement;
+      if (el && el.requestFullscreen) { var p = el.requestFullscreen(); if (p && p.catch) p.catch(function () {}); }
+    } catch (e) {}
+  }
+  function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) { if (document.exitFullscreen) document.exitFullscreen(); }
+      else enterFullscreen();
+    } catch (e) {}
+  }
+  function updateFsButton() {
+    var b = $('fs-toggle'); if (!b) return;
+    b.textContent = document.fullscreenElement ? 'EXIT FULLSCREEN' : 'FULLSCREEN';
+  }
+  document.addEventListener('fullscreenchange', updateFsButton);
+
   /* ----- wiring ----- */
+  var modeBtns = document.querySelectorAll('#mode-pick button');
+  modeBtns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      modeBtns.forEach(function (x) { x.classList.remove('selected'); });
+      b.classList.add('selected');
+      state.mode = b.dataset.mode;
+    });
+  });
   var timerBtns = document.querySelectorAll('#timer-pick button');
   timerBtns.forEach(function (b) {
     b.addEventListener('click', function () {
@@ -716,7 +799,7 @@ function init() {
       state.timerLimit = Number(b.dataset.secs);
     });
   });
-  $('play-btn').addEventListener('click', function () { getAudioCtx(); showLobby(); });
+  $('play-btn').addEventListener('click', function () { getAudioCtx(); enterFullscreen(); showLobby(); });
   $('let-me-in-btn').addEventListener('click', startRound);
   $('play-again-btn').addEventListener('click', showLobby);
   $('home-btn').addEventListener('click', function () { showScreen('start-screen'); renderBest(); });
@@ -738,8 +821,9 @@ function init() {
     state.soundOn = !state.soundOn;
     store.set(SOUND_KEY, state.soundOn);
     $('sound-toggle').textContent = state.soundOn ? 'SOUND: ON' : 'SOUND: OFF';
-    if (!state.soundOn && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+    if (!state.soundOn) stopCurrentAudio();
   });
+  $('fs-toggle').addEventListener('click', toggleFullscreen);
   document.addEventListener('keydown', function (e) {
     if (!$('game-screen').classList.contains('active') || state.answered) return;
     var n = Number(e.key);
@@ -748,7 +832,7 @@ function init() {
       if (btns[n - 1]) btns[n - 1].click();
     }
   });
-  $('player-name').addEventListener('keydown', function (e) { if (e.key === 'Enter') { getAudioCtx(); showLobby(); } });
+  $('player-name').addEventListener('keydown', function (e) { if (e.key === 'Enter') { getAudioCtx(); enterFullscreen(); showLobby(); } });
 
   $('sound-toggle').textContent = state.soundOn ? 'SOUND: ON' : 'SOUND: OFF';
   renderBest();
